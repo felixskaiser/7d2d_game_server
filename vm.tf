@@ -34,7 +34,15 @@ resource "google_compute_instance" "game_server" {
   tags = local.game_server_network_tags
 
   # Setup server via startup script
-  metadata_startup_script = file("./server_startup_script.sh")
+  metadata_startup_script = templatefile("./server_startup_script.tftpl", {
+    DEFAULT_SERVERCONFIG = base64encode(templatefile("./config/default_serverconfig.xml.tftpl",
+      {
+        SERVER_PASSWORD        = random_password.server_password.result
+        CONTROL_PANEL_PASSWORD = random_password.control_panel_password.result
+      }
+    ))
+    }
+  )
 }
 
 data "google_compute_image" "ubuntu_image" {

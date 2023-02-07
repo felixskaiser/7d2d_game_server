@@ -158,3 +158,18 @@ resource "google_compute_firewall" "egress_allow_game_server_public" {
     ports    = local.game_server_ports
   }
 }
+
+resource "google_compute_firewall" "ingress_allow_control_plane_public" {
+  project       = google_project.project.name
+  name          = "ingress-allow-control-plane-public"
+  network       = google_compute_network.network.self_link
+  direction     = "INGRESS"
+  source_ranges = [local.public_ip_range]
+  priority      = local.default_fw_rule_priority
+  target_tags   = local.game_server_network_tags
+
+  allow {
+    protocol = "tcp"
+    ports    = ["8080"]
+  }
+}

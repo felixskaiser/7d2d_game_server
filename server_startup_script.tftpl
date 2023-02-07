@@ -109,10 +109,16 @@ cd /home/steam/
 # Ensure directories exist
 # IMPORTANT: Changing these directories may require manual cleanup
 mkdir -p /home/steam/7d2d
+mkdir -p /home/steam/7d2d_saves
 mkdir -p /home/steam/.steam/sdk64
 
 # Link steamclient so that game server can find it
-ln -s /home/steam/Steam/linux64/steamclient.so /home/steam/.steam/sdk64/steamclient.so
+if [[ -L /home/steam/.steam/sdk64/steamclient.so ]]; then
+    echo "'/home/steam/Steam/linux64/steamclient.so' is already linked to '/home/steam/.steam/sdk64/steamclient.so'"
+else
+    echo "'/home/steam/Steam/linux64/steamclient.so' is not yet linked to '/home/steam/.steam/sdk64/steamclient.so', creating symbolic link..."
+    ln -s /home/steam/Steam/linux64/steamclient.so /home/steam/.steam/sdk64/steamclient.so
+fi
 
 # Install/update 7D2D dedicated linux server at /home/steam/7d2d
 # https://developer.valvesoftware.com/wiki/SteamCMD#Automating_SteamCMD
@@ -120,3 +126,9 @@ ln -s /home/steam/Steam/linux64/steamclient.so /home/steam/.steam/sdk64/steamcli
 
 # Ensure user steam is owner of /home/steam 
 sudo chown -R steam:steam /home/steam
+
+###############################################################################
+# Load server config
+###############################################################################
+
+echo "${DEFAULT_SERVERCONFIG}"|base64 --decode >/home/steam/7d2d/default_serverconfig.xml
