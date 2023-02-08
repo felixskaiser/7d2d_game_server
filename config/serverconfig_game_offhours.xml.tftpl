@@ -1,0 +1,70 @@
+	${SERVERCONFIG_BASE}
+	<!-- Difficulty -->
+	<property name="GameDifficulty"					value="2"/>					<!-- 0 - 5, 0=easiest, 5=hardest -->
+	<property name="BlockDamagePlayer"				value="100" />				<!-- How much damage do players to blocks (percentage in whole numbers) -->
+	<property name="BlockDamageAI"					value="100" />				<!-- How much damage do AIs to blocks (percentage in whole numbers) -->
+	<property name="BlockDamageAIBM"				value="100" />				<!-- How much damage do AIs during blood moons to blocks (percentage in whole numbers) -->
+	<property name="XPMultiplier"					value="25" />				<!-- XP gain multiplier (percentage in whole numbers) -->
+	<property name="PlayerSafeZoneLevel"			value="5" />				<!-- If a player is less or equal this level he will create a safe zone (no enemies) when spawned -->
+	<property name="PlayerSafeZoneHours"			value="5" />				<!-- Hours in world time this safe zone exists -->
+
+	<!--  -->
+	<property name="BuildCreate"					value="false" />			<!-- cheat mode on/off -->
+	<property name="DayNightLength"					value="240" />				<!-- real time minutes per in game day: 60 minutes -->
+	<property name="DayLightLength"					value="20" />				<!-- in game hours the sun shines per day: 18 hours day light per in game day -->
+	<property name="DropOnDeath"					value="3" />				<!-- 0 = nothing, 1 = everything, 2 = toolbelt only, 3 = backpack only, 4 = delete all -->
+	<property name="DropOnQuit"						value="0" />				<!-- 0 = nothing, 1 = everything, 2 = toolbelt only, 3 = backpack only -->
+	<property name="BedrollDeadZoneSize"			value="15" />				<!-- Size (box "radius", so a box with 2 times the given value for each side's length) of bedroll deadzone, no zombies will spawn inside this area, and any cleared sleeper volumes that touch a bedroll deadzone will not spawn after they've been cleared. -->
+	<property name="BedrollExpiryTime"				value="45" />				<!-- Number of real world days a bedroll stays active after owner was last online -->
+
+	<!-- Performance related -->
+	<property name="MaxSpawnedZombies"				value="64" />				<!-- This setting covers the entire map. There can only be this many zombies on the entire map at one time. Changing this setting has a huge impact on performance. -->
+	<property name="MaxSpawnedAnimals"				value="50" />				<!-- If your server has a large number of players you can increase this limit to add more wildlife. Animals don't consume as much CPU as zombies. NOTE: That this doesn't cause more animals to spawn arbitrarily: The biome spawning system only spawns a certain number of animals in a given area, but if you have lots of players that are all spread out then you may be hitting the limit and can increase it. -->
+	<property name="ServerMaxAllowedViewDistance"	value="12" />				<!-- Max viewdistance a client may request (6 - 12). High impact on memory usage and performance. -->
+
+	<!-- Zombie settings -->
+	<property name="EnemySpawnMode"					value="true" />				<!-- Enable/Disable enemy spawning -->
+	<property name="EnemyDifficulty"				value="0" />				<!-- 0 = Normal, 1 = Feral -->
+	<property name="ZombieFeralSense"				value="0" />				<!-- 0-3 (Off, Day, Night, All) -->
+	<property name="ZombieMove"						value="0" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="ZombieMoveNight"				value="3" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="ZombieFeralMove"				value="3" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="ZombieBMMove"					value="3" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="BloodMoonFrequency"				value="7" />				<!-- What frequency (in days) should a blood moon take place. Set to "0" for no blood moons -->
+	<property name="BloodMoonRange"					value="0" />				<!-- How many days can the actual blood moon day randomly deviate from the above setting. Setting this to 0 makes blood moons happen exactly each Nth day as specified in BloodMoonFrequency -->
+	<property name="BloodMoonWarning"				value="8" />				<!-- The Hour number that the red day number begins on a blood moon day. Setting this to -1 makes the red never show.  -->
+	<property name="BloodMoonEnemyCount"			value="8" />				<!-- This is the number of zombies that can be alive (spawned at the same time) at any time PER PLAYER during a blood moon horde, however, MaxSpawnedZombies overrides this number in multiplayer games. Also note that your game stage sets the max number of zombies PER PARTY. Low game stage values can result in lower number of zombies than the BloodMoonEnemyCount setting. Changing this setting has a huge impact on performance. -->
+
+	<!-- Loot -->
+	<property name="LootAbundance"					value="100" />				<!-- percentage in whole numbers -->
+	<property name="LootRespawnDays"				value="5" />				<!-- days in whole numbers -->
+	<property name="AirDropFrequency"				value="72"/>				<!-- How often airdrop occur in game-hours, 0 == never -->
+	<property name="AirDropMarker"					value="true"/>				<!-- Sets if a marker is added to map/compass for air drops. -->
+
+	<!-- Multiplayer -->
+	<property name="PartySharedKillRange"			value="250"/>				<!-- The distance you must be within to receive party shared kill xp and quest party kill objective credit. -->
+	<property name="PlayerKillingMode"				value="0" />				<!-- Player Killing Settings (0 = No Killing, 1 = Kill Allies Only, 2 = Kill Strangers Only, 3 = Kill Everyone) -->
+
+	<!-- Land claim options -->
+	<property name="LandClaimCount"					value="1"/>					<!-- Maximum allowed land claims per player. -->
+	<property name="LandClaimSize"					value="41"/>				<!-- Size in blocks that is protected by a keystone -->
+	<property name="LandClaimDeadZone"				value="30"/>				<!-- Keystones must be this many blocks apart (unless you are friends with the other player) -->
+	<property name="LandClaimExpiryTime"			value="7"/>					<!-- The number of real world days a player can be offline before their claims expire and are no longer protected -->
+	<property name="LandClaimDecayMode"				value="0"/>					<!-- Controls how offline players land claims decay. 0=Slow (Linear) , 1=Fast (Exponential), 2=None (Full protection until claim is expired). -->
+	<property name="LandClaimOnlineDurabilityModifier"	value="4"/>				<!-- How much protected claim area block hardness is increased when a player is online. 0 means infinite (no damage will ever be taken). Default is 4x -->
+	<property name="LandClaimOfflineDurabilityModifier"	value="4"/>				<!-- How much protected claim area block hardness is increased when a player is offline. 0 means infinite (no damage will ever be taken). Default is 4x -->
+	<property name="LandClaimOfflineDelay"			value="0"/>					<!-- The number of minutes after a player logs out that the land claim area hardness transitions from online to offline. Default is 0 -->
+
+
+	<property name="DynamicMeshEnabled"				value="true"/>				<!-- Is Dynamic Mesh system enabled -->
+	<property name="DynamicMeshLandClaimOnly"		value="true"/>				<!-- Is Dynamic Mesh system only active in player LCB areas -->
+	<property name="DynamicMeshLandClaimBuffer"		value="3"/>					<!-- Dynamic Mesh LCB chunk radius -->
+	<property name="DynamicMeshMaxItemCache"		value="3"/>					<!-- How many items can be processed concurrently, higher values use more RAM -->
+
+	<property name="TwitchServerPermission"			value="90"/>				<!-- Required permission level to use twitch integration on the server -->
+	<property name="TwitchBloodMoonAllowed"			value="false"/>				<!-- If the server allows twitch actions during a blood moon. This could cause server lag with extra zombies being spawned during blood moon. -->
+
+	<!-- There are several game settings that you cannot change when starting a new game.
+	You can use console commands to change at least some of them ingame.
+	setgamepref BedrollDeadZoneSize 30 -->
+</ServerSettings>

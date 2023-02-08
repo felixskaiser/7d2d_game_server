@@ -128,7 +128,8 @@ fi
 sudo chown -R steam:steam /home/steam
 
 ###############################################################################
-# Load server config
+# Load server configs
 ###############################################################################
 
-echo "${DEFAULT_SERVERCONFIG}"|base64 --decode >/home/steam/7d2d/default_serverconfig.xml
+echo "${SERVERCONFIG_DEFAULT}"|base64 --decode >/home/steam/7d2d/serverconfig_game_default.xml
+echo "${SERVERCONFIG_OFFHOURS}"|base64 --decode >/home/steam/7d2d/serverconfig_game_offhours.xml
