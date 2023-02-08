@@ -124,12 +124,17 @@ fi
 # https://developer.valvesoftware.com/wiki/SteamCMD#Automating_SteamCMD
 ./Steam/steamcmd.sh +force_install_dir /home/steam/7d2d +login anonymous +app_update 294420 valdiate +quit
 
+mkdir -p /home/steam/7d2d/7DaysToDieServer_Data/logs
+
 # Ensure user steam is owner of /home/steam 
 sudo chown -R steam:steam /home/steam
 
 ###############################################################################
-# Load server configs
+# Load server configs & game server management CLI
 ###############################################################################
 
 echo "${SERVERCONFIG_DEFAULT}"|base64 --decode >/home/steam/7d2d/serverconfig_game_default.xml
 echo "${SERVERCONFIG_OFFHOURS}"|base64 --decode >/home/steam/7d2d/serverconfig_game_offhours.xml
+
+sudo echo "${SERVER_CMD}"|base64 --decode >/usr/local/bin/7d2d_server
+sudo chmod +x /usr/local/bin/7d2d_server

@@ -11,6 +11,7 @@ locals {
   game_server_startup_script = templatefile("./server_startup_script.tftpl", {
     SERVERCONFIG_DEFAULT  = local.serverconfig_game_default,
     SERVERCONFIG_OFFHOURS = local.serverconfig_game_offhours
+    SERVER_CMD            = base64encode(file("./cmd/7d2d_server"))
     }
   )
 
