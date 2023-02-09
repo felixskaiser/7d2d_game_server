@@ -135,6 +135,13 @@ sudo chown -R steam:steam /home/steam
 
 echo "${SERVERCONFIG_DEFAULT}"|base64 --decode >/home/steam/7d2d/serverconfig_game_default.xml
 echo "${SERVERCONFIG_OFFHOURS}"|base64 --decode >/home/steam/7d2d/serverconfig_game_offhours.xml
+echo "serverconfig_game_default.xml" >/home/steam/7d2d/serverconfig.lock
 
 sudo echo "${SERVER_CMD}"|base64 --decode >/usr/local/bin/7d2d_server
 sudo chmod +x /usr/local/bin/7d2d_server
+
+###############################################################################
+# Start the game
+###############################################################################
+
+7d2d_server start

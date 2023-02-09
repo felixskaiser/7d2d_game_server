@@ -9,30 +9,32 @@ PROCESS_NAME="7DaysToDieServe" # first 15 chars of process, this depends on var 
 GAME_USER="steam"
 GAME_DIR="/home/steam/7d2d"
 GAME_BIN="$GAME_DIR/7DaysToDieServer.x86_64"
+GAME_TELNET_IP="localhost"
+GAME_TELNET_PORT="8081"
 GAME_LOG_DIR="$GAME_DIR/7DaysToDieServer_Data/logs"
 GAME_LOGFILE="$GAME_LOG_DIR/output_log_$(date +%Y-%m-%d__%H-%M-%S).log"
 GAME_STARTUP_LOG="$GAME_LOG_DIR/startup_log_$(date +%Y-%m-%d__%H-%M-%S).log"
-GAME_DEFAULT_CONFIGFILE="serverconfig_game_default.xml"
-GAME_OPTS="-logfile $GAME_LOGFILE -quit -batchmode -nographics -dedicated "
+GAME_CONFIGFILE_LOCK="serverconfig.lock"
+GAME_OPTS="-logfile $GAME_LOGFILE -quit -batchmode -nographics -dedicated"
 
 start() {
     PID="$(get_pid)"
     if [[ "$PID" != "" ]]; then
         echo "Game server is already running"
-        exit 3
     else
         echo "Starting game server..."
         local used_configfile=""
 
         if [[ $CONFIGFILE == "" ]]; then
-            echo "Using default configfile $GAME_DEFAULT_CONFIGFILE"
-            used_configfile="$GAME_DEFAULT_CONFIGFILE"
+            echo "No input for configfile, using configfile from lock $GAME_CONFIGFILE_LOCK: $(cat $GAME_DIR/$GAME_CONFIGFILE_LOCK)"
+            used_configfile="$(cat $GAME_DIR/$GAME_CONFIGFILE_LOCK)"
         elif [[ -e "$GAME_DIR/$CONFIGFILE" ]]; then
-            echo "Using configfile $CONFIGFILE"
+            echo "Using configfile $CONFIGFILE from input"
+            su -l $GAME_USER -c "echo $CONFIGFILE >$GAME_DIR/$GAME_CONFIGFILE_LOCK"
             used_configfile="$CONFIGFILE"
         else
             echo "configfile '$GAME_DIR/$CONFIGFILE' doesn't exist"
-            exit 3
+            exit 1
         fi
 
         set -x
@@ -44,7 +46,6 @@ start() {
         PID="$(get_pid)"
         if [[ "$PID" != "" ]]; then
             echo "success"
-            exit 0
         else
             echo "failure"
             cat $GAME_STARTUP_LOG
@@ -57,22 +58,54 @@ stop() {
     PID="$(get_pid)"
     if [[ "$PID" == "" ]]; then
         echo "Game server is already stopped"
-        exit 3
     else
         echo "Stopping game server..."
+        shutdown
+    fi
+}
+
+reload() {
+    PID="$(get_pid)"
+    if [[ "$PID" == "" ]]; then
+        echo "Game server is already stopped"
+    else
+        echo "Reloading game server..."
+        eval "{ sleep 3; echo 'say SERVER_EVENT_RESTART'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+        sleep 3
+        shutdown
+        sleep 20
+    fi
+
+    start
+}
+
+shutdown() {
+    eval "{ sleep 3; echo 'say bye...'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+    sleep 3
+    eval "{ sleep 3; echo 'lpi'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+    sleep 3
+    eval "{ sleep 3; echo 'shutdown'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+    sleep 10
+
+    PID="$(get_pid)"
+    if [[ "$PID" == "" ]]; then
+        echo "Game server is already stopped"
+    else
         sudo kill $PID
-        exit $?
+        if [[ "$?" != "0" ]]; then
+            echo "Error shutting down game server with pid $PID: $?"
+            exit "$?"
+        fi
     fi
 }
 
 status() {
     PID="$(get_pid)"
     if [[ "$PID" == "" ]]; then
-        echo "Game server is stopped"
-        exit 3
+        echo "Game server is stopped, configfile locked to $(cat $GAME_DIR/$GAME_CONFIGFILE_LOCK)"
     else
-        echo "Game server is running: $(ps -p $PID)"
-        exit 0
+        echo "Game server is running, configfile locked to $(cat $GAME_DIR/$GAME_CONFIGFILE_LOCK): $(ps -p $PID)"
+        eval "{ sleep 3; echo 'lpi'; sleep 3; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
     fi
 }
 
@@ -91,17 +124,21 @@ set -u
 
 case "$COMMAND" in
   start)
-        echo "DEBUG: $CONFIGFILE"
+        echo "DEBUG: configfile=$CONFIGFILE"
         start
         ;;
   stop)
         stop
         ;;
+  reload)
+        echo "DEBUG: configfile=$CONFIGFILE"
+        reload
+        ;;
   status)
         status
         ;;
   *)
-        echo $"Usage: $CMD_NAME <command> (<command> must be one of: start, stop,status)"
+        echo $"Usage: $CMD_NAME <command> <configfile> (<command> must be one of: start, stop, reload, status. <configfile> is optional)"
         exit 1
 esac
 

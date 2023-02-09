@@ -32,8 +32,8 @@ resource "google_secret_manager_secret_version" "server_password_secret_version"
 ###############################################################################
 
 resource "random_password" "control_panel_password" {
-  length  = 10
-  special = true
+  length  = 12
+  special = false
 }
 
 resource "google_secret_manager_secret" "control_panel_password_secret" {
