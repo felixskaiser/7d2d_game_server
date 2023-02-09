@@ -33,8 +33,10 @@ resource "google_compute_instance" "game_server" {
 
   tags = local.game_server_network_tags
 
-  # Setup server via startup script
-  metadata_startup_script = local.game_server_startup_script
+  metadata = {
+    startup-script = local.game_server_startup_script
+    shutdown-script = local.game_server_shutdown_script
+  }
 }
 
 data "google_compute_image" "ubuntu_image" {
@@ -86,4 +88,3 @@ resource "google_compute_resource_policy" "backup_policy" {
     }
   }
 }
-

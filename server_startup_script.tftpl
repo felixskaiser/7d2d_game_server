@@ -1,45 +1,65 @@
 #!/bin/bash
 set -euxo pipefail
 
-# IMPORTANT: Changing this script will force a recreation of the game server VM!
-
 # Setup according to:
 # - https://developer.valvesoftware.com/wiki/SteamCMD
 # - https://7daystodie.fandom.com/wiki/Linux_Server_with_Amazon_Linux_AMI
+
+###############################################################################
+# CONFIG
+###############################################################################
+
+DEVICE_NAME="sdb"
+STEAM_USR="steam"
+STEAM_USR_HOME_DIR="/home/steam"
+CMD_NAME="7d2d_server"
+GAME_BASE_DIR="$STEAM_USR_HOME_DIR/7d2d"
+GAME_SAVE_DIR="$STEAM_USR_HOME_DIR/7d2d_saves"
+GAME_LOG_DIR="$GAME_BASE_DIR/7DaysToDieServer_Data/logs"
+
+# Game config
+OFFHOURS_START_TIME="01:00:00"
+OFFHOURS_START_TIME_CRON="0 1 * * *" # At 01:00 (https://crontab.guru/#0_1_*_*_*)
+OFFHOURS_END_TIME="20:00:00"
+OFFHOURS_END_TIME_CRON="0 19 * * *" # At 20:00 (https://crontab.guru/#0_20_*_*_*)
+
+SERVERCONFIG_DEFAULT_FILE_NAME="serverconfig_game_default.xml"
+SERVERCONFIG_OFFHOURS_FILE_NAME="serverconfig_game_offhours.xml"
 
 ###############################################################################
 # Install 'steamcmd' dependencies
 ###############################################################################
 echo "INFO: Install 'steamcmd' and dependencies"
 
-# Add dependencies
 sudo dpkg --add-architecture i386
 sudo apt update
 sudo apt install software-properties-common -y
 sudo apt install lib32gcc-s1 -y
-sudo apt install lib32stdc++6
+sudo apt install lib32stdc++6 -y
 
 ###############################################################################
 # Format game storage disk (if necessary) and mount it
 ###############################################################################
 echo "INFO: Format game storage disk (if necessary) and mount it"
 
-DEVICE_NAME="sdb"
-
 # Only format disk if it's not formatted yet
 # https://cloud.google.com/compute/docs/disks/add-persistent-disk#formatting
-if sudo blkid --match-token TYPE=ext4 /dev/$DEVICE_NAME; then
+if sudo blkid --match-token TYPE=ext4 "/dev/$DEVICE_NAME"; then
     echo "disk '/dev/$DEVICE_NAME' is already formatted as ext4"
 else
     echo "disk '$DEVICE_NAME' isn't formatted yet, formatting it as ext4..."
     sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/$DEVICE_NAME
 fi
 
-
 # Mount disk to /home/steam
 # https://cloud.google.com/compute/docs/disks/add-persistent-disk#mounting
-sudo mkdir -p /home/steam
-sudo mount -o discard,defaults /dev/$DEVICE_NAME /home/steam
+if [[ $(findmnt -rno SOURCE,TARGET "/dev/$DEVICE_NAME") != $(echo "/dev/$DEVICE_NAME $STEAM_USR_HOME_DIR") ]]; then
+    echo "Mounting disk '/dev/$DEVICE_NAME' at $STEAM_USR_HOME_DIR"
+    sudo mkdir -p "$STEAM_USR_HOME_DIR"
+    sudo mount -o discard,defaults /dev/"$DEVICE_NAME" "$STEAM_USR_HOME_DIR"
+else
+    echo "Disk '/dev/$DEVICE_NAME' is already mounted at $STEAM_USR_HOME_DIR"
+fi
 
 # Configure /etc/fstab
 DISK_UUID=$(sudo blkid /dev/$DEVICE_NAME|sed 's~/dev/sdb: UUID="~~'|sed 's~" TYPE="ext4"~~')
@@ -49,12 +69,12 @@ if grep "$DISK_UUID" /etc/fstab; then
 else
     echo "/etc/fstab doesn't yet contain an entry for disk '/dev/$DEVICE_NAME' with UUID '$DISK_UUID', updating..."
     cp /etc/fstab fstab_new
-    echo "UUID=$DISK_UUID /home/steam ext4 discard,defaults 0 2">>fstab_new
+    echo "UUID=$DISK_UUID $STEAM_USR_HOME_DIR ext4 discard,defaults 0 2">>fstab_new
     sudo mv fstab_new /etc/fstab 
 fi
 
 # Grant write access to the disk for all users
-sudo chmod a+w /home/steam
+sudo chmod a+w "$STEAM_USR_HOME_DIR"
 
 # Log results
 sudo lsblk
@@ -62,23 +82,23 @@ sudo lsblk
 ###############################################################################
 # Create and use user 'steam' to run 'steamcmd' with
 ###############################################################################
-echo "INFO: Create and use user 'steam' to run 'steamcmd' with"
+echo "INFO: Create and use user '$STEAM_USR' to run 'steamcmd' with"
 
 # Check if user steam exists, set it up if necessary
-if [[ !$(cut -d: -f1 /etc/passwd|grep -q "steam") ]]; then
-    echo "user 'steam' doesn't exist yet, setting it up..."
+if cut -d: -f1 /etc/passwd|grep "$STEAM_USR"; then
+    echo "user '$STEAM_USR' already exists"
+else
+    echo "user '$STEAM_USR' doesn't exist yet, setting it up..."
     # Add user and create home directory at /home/steam
-    sudo useradd -m steam
+    sudo useradd -m "$STEAM_USR"
 
     # Create user steam without password
-    sudo passwd -d steam
-else
-    echo "user 'steam' already exists"
+    sudo passwd -d "$STEAM_USR"
 fi
 
 # Switch to user steam and go to its home directory
-su steam
-cd /home/steam
+su $STEAM_USR
+cd "$STEAM_USR_HOME_DIR"
 
 ###############################################################################
 # Install 'steamcmd'
@@ -86,8 +106,8 @@ cd /home/steam
 echo "INFO: Check/install 'steamcmd'"
 
 # IMPORTANT: Changing this directory may require manual cleanup
-mkdir -p /home/steam/Steam
-cd /home/steam/Steam
+mkdir -p "$STEAM_USR_HOME_DIR"/Steam
+cd "$STEAM_USR_HOME_DIR"/Steam
 
 if [[ -e steamcmd.sh ]]; then
     echo "'steamcmd.sh' already exists on disk"
@@ -105,43 +125,72 @@ cat steamcmd.sh
 ###############################################################################
 echo "INFO: Setup game server"
 
-cd /home/steam/
+cd "$STEAM_USR_HOME_DIR"
 # Ensure directories exist
 # IMPORTANT: Changing these directories may require manual cleanup
-mkdir -p /home/steam/7d2d
-mkdir -p /home/steam/7d2d_saves
-mkdir -p /home/steam/.steam/sdk64
+mkdir -p "$GAME_BASE_DIR"
+mkdir -p "$GAME_SAVE_DIR"
 
 # Link steamclient so that game server can find it
-if [[ -L /home/steam/.steam/sdk64/steamclient.so ]]; then
-    echo "'/home/steam/Steam/linux64/steamclient.so' is already linked to '/home/steam/.steam/sdk64/steamclient.so'"
+mkdir -p "$STEAM_USR_HOME_DIR"/.steam/sdk64
+if [[ -L "$STEAM_USR_HOME_DIR"/.steam/sdk64/steamclient.so ]]; then
+    echo "'$STEAM_USR_HOME_DIR/Steam/linux64/steamclient.so' is already linked to '$STEAM_USR_HOME_DIR/.steam/sdk64/steamclient.so'"
 else
-    echo "'/home/steam/Steam/linux64/steamclient.so' is not yet linked to '/home/steam/.steam/sdk64/steamclient.so', creating symbolic link..."
-    ln -s /home/steam/Steam/linux64/steamclient.so /home/steam/.steam/sdk64/steamclient.so
+    echo "'$STEAM_USR_HOME_DIR/Steam/linux64/steamclient.so' is not yet linked to '$STEAM_USR_HOME_DIR/.steam/sdk64/steamclient.so', creating symbolic link..."
+    ln -s "$STEAM_USR_HOME_DIR"/Steam/linux64/steamclient.so "$STEAM_USR_HOME_DIR"/.steam/sdk64/steamclient.so
 fi
 
 # Install/update 7D2D dedicated linux server at /home/steam/7d2d
 # https://developer.valvesoftware.com/wiki/SteamCMD#Automating_SteamCMD
-./Steam/steamcmd.sh +force_install_dir /home/steam/7d2d +login anonymous +app_update 294420 valdiate +quit
+./Steam/steamcmd.sh +force_install_dir "$STEAM_USR_HOME_DIR"/7d2d +login anonymous +app_update 294420 valdiate +quit
 
-mkdir -p /home/steam/7d2d/7DaysToDieServer_Data/logs
+mkdir -p "$GAME_LOG_DIR"
 
 # Ensure user steam is owner of /home/steam 
-sudo chown -R steam:steam /home/steam
+sudo chown -R "$STEAM_USR":"$STEAM_USR" "$STEAM_USR_HOME_DIR"
 
 ###############################################################################
 # Load server configs & game server management CLI
 ###############################################################################
 
-echo "${SERVERCONFIG_DEFAULT}"|base64 --decode >/home/steam/7d2d/serverconfig_game_default.xml
-echo "${SERVERCONFIG_OFFHOURS}"|base64 --decode >/home/steam/7d2d/serverconfig_game_offhours.xml
-echo "serverconfig_game_default.xml" >/home/steam/7d2d/serverconfig.lock
+# Load server configs
+echo "${SERVERCONFIG_DEFAULT}"|base64 --decode >"$GAME_BASE_DIR"/"$SERVERCONFIG_DEFAULT_FILE_NAME"
+echo "${SERVERCONFIG_OFFHOURS}"|base64 --decode >"$GAME_BASE_DIR"/"$SERVERCONFIG_OFFHOURS_FILE_NAME"
 
-sudo echo "${SERVER_CMD}"|base64 --decode >/usr/local/bin/7d2d_server
-sudo chmod +x /usr/local/bin/7d2d_server
+# Load game server management CLI
+sudo echo "${SERVER_CMD_SCRIPT}"|base64 --decode >/usr/local/bin/"$CMD_NAME"
+sudo chmod +x /usr/local/bin/"$CMD_NAME"
+
+# Conditionally set game mode
+current_time_sec=$(date +%X|awk -F: '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+offhours_start_time_sec=$(echo "$OFFHOURS_START_TIME"|awk -F: '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+offhours_end_time_sec=$(echo "$OFFHOURS_END_TIME"|awk -F: '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+
+if [[ "$current_time_sec" -ge "$offhours_start_time_sec" && "$current_time_sec" -lt "$offhours_end_time_sec" ]]; then
+    echo "$SERVERCONFIG_OFFHOURS_FILE_NAME" >"$GAME_BASE_DIR"/serverconfig.lock
+else
+    echo "$SERVERCONFIG_DEFAULT_FILE_NAME" >"$GAME_BASE_DIR"/serverconfig.lock
+fi
+
+# Add cronjob to conditionally set game mode
+crontab -l > newcron || true
+start_offhours_cron="$OFFHOURS_START_TIME_CRON $CMD_NAME reload $SERVERCONFIG_OFFHOURS_FILE_NAME"
+start_default_cron="$OFFHOURS_END_TIME_CRON $CMD_NAME reload $SERVERCONFIG_DEFAULT_FILE_NAME"
+
+if ! cat newcron|grep "$start_offhours_cron"; then
+    echo "$start_offhours_cron" >> newcron
+fi
+
+if ! cat newcron|grep "$start_default_cron"; then
+    echo "$start_default_cron" >> newcron
+fi
+
+crontab newcron
+rm newcron
+crontab -l
 
 ###############################################################################
 # Start the game
 ###############################################################################
 
-7d2d_server start
+"$CMD_NAME" start

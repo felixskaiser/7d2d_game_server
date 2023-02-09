@@ -11,7 +11,7 @@ locals {
   game_server_startup_script = templatefile("./server_startup_script.tftpl", {
     SERVERCONFIG_DEFAULT  = local.serverconfig_game_default,
     SERVERCONFIG_OFFHOURS = local.serverconfig_game_offhours
-    SERVER_CMD            = base64encode(file("./cmd/7d2d_server"))
+    SERVER_CMD_SCRIPT     = base64encode(file("./cmd/7d2d_server"))
     }
   )
 
@@ -33,4 +33,6 @@ locals {
       CONTROL_PANEL_PASSWORD = random_password.control_panel_password.result
     }
   )
+
+  game_server_shutdown_script = "#! /bin/bash 7d2d_server stop"
 }
