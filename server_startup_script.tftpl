@@ -25,6 +25,7 @@ OFFHOURS_END_TIME_CRON="0 19 * * *" # At 20:00 (https://crontab.guru/#0_20_*_*_*
 
 SERVERCONFIG_DEFAULT_FILE_NAME="serverconfig_game_default.xml"
 SERVERCONFIG_OFFHOURS_FILE_NAME="serverconfig_game_offhours.xml"
+ADMINCONFIG_FILE_NAME="serveradmin.xml"
 
 ###############################################################################
 # Install 'steamcmd' dependencies
@@ -156,6 +157,9 @@ sudo chown -R "$STEAM_USR":"$STEAM_USR" "$STEAM_USR_HOME_DIR"
 # Load server configs
 echo "${SERVERCONFIG_DEFAULT}"|base64 --decode >"$GAME_BASE_DIR"/"$SERVERCONFIG_DEFAULT_FILE_NAME"
 echo "${SERVERCONFIG_OFFHOURS}"|base64 --decode >"$GAME_BASE_DIR"/"$SERVERCONFIG_OFFHOURS_FILE_NAME"
+
+# Load admin config
+echo "${ADMINCONFIG}"|base64 --decode >"$GAME_SAVE_DIR"/"$ADMINCONFIG_FILE_NAME"
 
 # Load game server management CLI
 sudo echo "${SERVER_CMD_SCRIPT}"|base64 --decode >/usr/local/bin/"$CMD_NAME"
