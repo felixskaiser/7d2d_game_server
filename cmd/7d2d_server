@@ -11,6 +11,7 @@ GAME_DIR="/home/steam/7d2d"
 GAME_BIN="$GAME_DIR/7DaysToDieServer.x86_64"
 GAME_TELNET_IP="localhost"
 GAME_TELNET_PORT="8081"
+GAME_TELNET_PASSWORD=$(cat "$GAME_DIR"/telnet_password)
 GAME_LOG_DIR="$GAME_DIR/7DaysToDieServer_Data/logs"
 GAME_LOGFILE="$GAME_LOG_DIR/output_log_$(date +%Y-%m-%d__%H-%M-%S).log"
 GAME_STARTUP_LOG="$GAME_LOG_DIR/startup_log_$(date +%Y-%m-%d__%H-%M-%S).log"
@@ -70,7 +71,7 @@ reload() {
         echo "Game server is already stopped"
     else
         echo "Reloading game server..."
-        eval "{ sleep 3; echo 'say SERVER_EVENT_RESTART'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+        eval "{ sleep 3; echo $GAME_TELNET_PASSWORD; sleep 3; echo 'say SERVER_EVENT_RESTART'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
         sleep 3
         shutdown
         sleep 20
@@ -80,11 +81,9 @@ reload() {
 }
 
 shutdown() {
-    eval "{ sleep 3; echo 'say bye...'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+    eval "{ sleep 3; echo $GAME_TELNET_PASSWORD; sleep 3; echo 'lpi'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
     sleep 3
-    eval "{ sleep 3; echo 'lpi'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
-    sleep 3
-    eval "{ sleep 3; echo 'shutdown'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+    eval "{ sleep 3; echo $GAME_TELNET_PASSWORD; sleep 3; echo 'shutdown'; sleep 2; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
     sleep 10
 
     PID="$(get_pid)"
@@ -105,7 +104,7 @@ status() {
         echo "Game server is stopped, configfile locked to $(cat $GAME_DIR/$GAME_CONFIGFILE_LOCK)"
     else
         echo "Game server is running, configfile locked to $(cat $GAME_DIR/$GAME_CONFIGFILE_LOCK): $(ps -p $PID)"
-        eval "{ sleep 3; echo 'lpi'; sleep 3; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
+        eval "{ sleep 3; echo $GAME_TELNET_PASSWORD; sleep 3; echo 'lpi'; sleep 3; }"|telnet "$GAME_TELNET_IP" "$GAME_TELNET_PORT" || true
     fi
 }
 
@@ -121,6 +120,11 @@ set +u
 COMMAND="$1"
 CONFIGFILE="$2"
 set -u
+
+if [[ "$GAME_TELNET_PASSWORD" == "" ]]; then
+    echo "Init error: Password for telnet server is empty"
+    exit 1
+fi
 
 case "$COMMAND" in
   start)

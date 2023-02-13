@@ -18,3 +18,27 @@ resource "google_project_service" "secret_manager_service" {
   project    = google_project.project.name
   depends_on = [google_project.project]
 }
+
+resource "google_project_service" "cloud_functions_service" {
+  service    = "cloudfunctions.googleapis.com"
+  project    = google_project.project.name
+  depends_on = [google_project.project]
+}
+
+resource "google_project_service" "cloud_build_service" {
+  service    = "cloudbuild.googleapis.com"
+  project    = google_project.project.name
+  depends_on = [google_project.project]
+}
+
+resource "google_project_service" "artifact_registry_service" {
+  service    = "artifactregistry.googleapis.com"
+  project    = google_project.project.name
+  depends_on = [google_project.project]
+}
+
+resource "google_project_service" "cloud_run_service" {
+  service    = "run.googleapis.com"
+  project    = google_project.project.name
+  depends_on = [google_project.project]
+}

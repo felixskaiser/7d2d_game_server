@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
-    bucket  = "terraform_state_private"
-    prefix  = "state/game-server-7d2d-felix"
+    bucket = "terraform_state_private"
+    prefix = "state/game-server-7d2d-felix"
   }
   required_providers {
     google = {

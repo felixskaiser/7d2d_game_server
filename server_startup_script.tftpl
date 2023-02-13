@@ -16,6 +16,7 @@ CMD_NAME="7d2d_server"
 GAME_BASE_DIR="$STEAM_USR_HOME_DIR/7d2d"
 GAME_SAVE_DIR="$STEAM_USR_HOME_DIR/7d2d_saves"
 GAME_LOG_DIR="$GAME_BASE_DIR/7DaysToDieServer_Data/logs"
+GAME_TELNET_SERVER_PASSWORD_FILE="$GAME_BASE_DIR/telnet_password"
 
 # Game config
 OFFHOURS_START_TIME="01:00:00"
@@ -147,9 +148,6 @@ fi
 
 mkdir -p "$GAME_LOG_DIR"
 
-# Ensure user steam is owner of /home/steam 
-sudo chown -R "$STEAM_USR":"$STEAM_USR" "$STEAM_USR_HOME_DIR"
-
 ###############################################################################
 # Load server configs & game server management CLI
 ###############################################################################
@@ -196,5 +194,10 @@ crontab -l
 ###############################################################################
 # Start the game
 ###############################################################################
+# Make telnet server password available on VM
+echo "${TELNET_PASSWORD}"|base64 --decode >"$GAME_TELNET_SERVER_PASSWORD_FILE"
+
+# Ensure user steam is owner of /home/steam 
+sudo chown -R "$STEAM_USR":"$STEAM_USR" "$STEAM_USR_HOME_DIR"
 
 "$CMD_NAME" start

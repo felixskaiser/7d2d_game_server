@@ -12,7 +12,8 @@ locals {
     SERVERCONFIG_DEFAULT  = local.serverconfig_game_default,
     SERVERCONFIG_OFFHOURS = local.serverconfig_game_offhours,
     SERVER_CMD_SCRIPT     = base64encode(file("./cmd/7d2d_server")),
-    ADMINCONFIG           = base64encode(file("./config/serveradmin.xml"))
+    ADMINCONFIG           = base64encode(file("./config/serveradmin.xml")),
+    TELNET_PASSWORD       = base64encode(random_password.telnet_password.result)
     }
   )
 
@@ -32,8 +33,15 @@ locals {
     {
       SERVER_PASSWORD        = random_password.server_password.result
       CONTROL_PANEL_PASSWORD = random_password.control_panel_password.result
+      TELNET_PASSWORD        = random_password.telnet_password.result
     }
   )
 
   game_server_shutdown_script = "#! /bin/bash 7d2d_server stop"
+
+  # functions
+  function_status_roles = [
+    "roles/secretmanager.secretAccessor",
+    "roles/compute.viewer"
+  ]
 }
