@@ -1,4 +1,4 @@
-module github.com/felixskaiser/7d2d_game_server/status
+module github.com/felixskaiser/7d2d_game_server/server-manager
 
 go 1.19
 

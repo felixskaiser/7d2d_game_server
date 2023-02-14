@@ -1,4 +1,4 @@
-package serverStatus
+package serverManager
 
 import (
 	"bufio"
@@ -92,7 +92,7 @@ func sendCmd(cmd string, conn net.Conn) (string, error) {
 	log.Printf("TELNET_SERVER_CMD: Sending command '%s' to telnet server", cmd)
 
 	// Read until no more content
-	err := readAll(conn, readerCmd, 5)
+	_, err := readAll(conn, readerCmd, 5)
 	if err != nil {
 		return "", err
 	}
@@ -109,7 +109,7 @@ func sendCmd(cmd string, conn net.Conn) (string, error) {
 	}
 
 	// Listen for reply
-	respCmd, err := readerCmd.ReadString('\n')
+	respCmd, err := readAll(conn, readerCmd, 5)
 	if err != nil {
 		return "", fmt.Errorf("Error sending command '%s' to telnet server: %v", cmd, err)
 	}
@@ -121,7 +121,7 @@ func sendCmd(cmd string, conn net.Conn) (string, error) {
 	}
 
 	// Read until no more content
-	err = readAll(conn, readerCmd, 5)
+	_, err = readAll(conn, readerCmd, 5)
 	if err != nil {
 		return "", err
 	}
@@ -130,7 +130,8 @@ func sendCmd(cmd string, conn net.Conn) (string, error) {
 }
 
 // Attempt to read all content from game's telnet server to clear the reader but still be able to log server's responses
-func readAll(conn net.Conn, reader *bufio.Reader, maxTries int) error {
+func readAll(conn net.Conn, reader *bufio.Reader, maxTries int) (string, error) {
+	respAggregate := ""
 	tries := 0
 	for {
 		resp, err := reader.ReadString('\n')
@@ -138,20 +139,21 @@ func readAll(conn net.Conn, reader *bufio.Reader, maxTries int) error {
 			// Treat timeout as telnet server having nothing more to send
 			if errors.Is(err, os.ErrDeadlineExceeded) {
 				conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-				return nil
+				return respAggregate, nil
 			}
 
-			return fmt.Errorf("Error reading all from telnet server: %v", err)
+			return respAggregate, fmt.Errorf("Error reading all from telnet server: %v", err)
 		}
 
 		if resp == "" {
-			return nil
+			return respAggregate, nil
 		}
 
 		log.Printf("Reading all from telnet server, got response: %s", resp)
+		respAggregate += resp
 
 		if tries >= maxTries {
-			return fmt.Errorf("Max tries for reading all from telnet server")
+			return respAggregate, fmt.Errorf("Max tries for reading all from telnet server")
 		}
 
 		tries += 1

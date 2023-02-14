@@ -18,6 +18,5 @@ export TELNET_PASSWORD_SEC_NAME=telnet-password
 Run server:
 
 ```sh
-cd function/status/cmd
-go run main.go
+go run cmd/main.go
 ```

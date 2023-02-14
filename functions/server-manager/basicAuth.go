@@ -1,4 +1,4 @@
-package serverStatus
+package serverManager
 
 import (
 	"crypto/sha256"

@@ -1,4 +1,4 @@
-package serverStatus
+package serverManager
 
 import (
 	"context"
@@ -12,7 +12,12 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
+const (
+	templateSubDir string = "templates/"
+)
+
 var (
+	templateDir          string
 	projectID            string
 	zone                 string
 	instance             string
@@ -22,12 +27,17 @@ var (
 	telnetPort           string
 	telnetPassword       string
 	computeServiceClient *compute.Service
+
+	mux = http.NewServeMux()
 )
+
+type Empty struct{}
 
 func init() {
 	log.Println("Initializing server status function")
 
 	// Get env vars
+	iscloudFunctionStr := os.Getenv("IS_CLOUD_FUNCTION")
 	projectID = os.Getenv("GCP_PROJECT_ID")
 	zone = os.Getenv("GCP_ZONE")
 	instance = os.Getenv("GCP_INSTANCE_NAME")
@@ -66,6 +76,47 @@ func init() {
 		)
 	}
 
+	if iscloudFunctionStr == "true" {
+		// DEBUG
+		_, err := os.Stat("/workspace")
+		if err != nil {
+			log.Printf("Not a directory: /workspace': %v", err)
+		} else {
+			entries, _ := os.ReadDir("/workspace")
+			log.Printf("DEBUG: '/workspace' => %v", entries)
+			for _, e := range entries {
+				log.Printf("DEBUG: %v", e.Name())
+			}
+		}
+
+		_, err = os.Stat("/workspace/serverless_function_source_code")
+		if err != nil {
+			log.Printf("Not a directory: ./serverless_function_source_code': %v", err)
+		} else {
+			entries, _ := os.ReadDir("./serverless_function_source_code")
+			log.Printf("DEBUG: './serverless_function_source_code' => %v", entries)
+			for _, e := range entries {
+				log.Printf("DEBUG: %v", e.Name())
+			}
+		}
+
+		functionSourceCodeDir := "/workspace/serverless_function_source_code/"
+		_, err = os.Stat(functionSourceCodeDir)
+		if err != nil {
+			log.Fatalf("Not a directory: '%s': %v", functionSourceCodeDir, err)
+		}
+
+		templateDir = functionSourceCodeDir + templateSubDir
+		_, err = os.Stat(templateDir)
+		if err != nil {
+			log.Fatalf("Not a directory: '%s': %v", functionSourceCodeDir, err)
+		}
+
+	} else {
+		templateDir = templateSubDir
+	}
+	log.Printf("Looking for HTML template files at %s", templateDir)
+
 	ctx := context.Background()
 
 	// Create GCP Secret Manager client
@@ -99,59 +150,15 @@ func init() {
 		log.Fatalf("Failed to setup Compute Engine client: %v", err)
 	}
 
+	// Register routes
+	mux.HandleFunc("/status", basicAuth(getServerStatus, userName, password))
+	mux.HandleFunc("/", basicAuth(defaultHandler, userName, password))
+
 	log.Println("Done initializing server status function")
 }
 
 // Entrypoint is the starting point for this Cloud Function
 func Entrypoint(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Serving new request")
-	basicAuth(getServerStatus, userName, password).ServeHTTP(w, r)
+	mux.ServeHTTP(w, r)
 	return
-}
-
-// Check if VM is running and how many players are in the game (implicitely checks if game server is running as well)
-func getServerStatus(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting server status")
-
-	isRunning := isVMRunning(projectID, zone, instance)
-	if !isRunning {
-		fmt.Fprintln(w, "Server virtual machine is NOT running")
-		return
-	}
-
-	players, err := getPlayersInGame(telnetHost, telnetPort, telnetPassword)
-	if err != nil {
-		fmt.Fprintln(w, "Server virtual machine is running\nError connecting to game telnet server for checking players in game, please retry in a few seconds")
-		return
-	}
-
-	fmt.Fprintf(w, "Server virtual machine is running\nPlayers in game: %s", players)
-}
-
-// Check if VM status is 'RUNNING'
-func isVMRunning(projectID, zone, instance string) bool {
-	log.Printf("Checking VM status")
-	vm, err := computeServiceClient.Instances.Get(projectID, zone, instance).Do()
-	if err != nil {
-		log.Printf("Error checking VM status: %v", err)
-		return false
-	}
-
-	if vm.Status == "RUNNING" {
-		return true
-	}
-
-	return false
-}
-
-// Query how many players are in the game via game's telnet server
-func getPlayersInGame(telnetHost, telnetPort, telnetPassword string) (string, error) {
-	log.Printf("Checking players in game")
-	msg, err := sendTelnetCmd("lpi", telnetHost, telnetPort, telnetPassword)
-	if err != nil {
-		log.Printf("Error connecting to telnet server for checking players in game: %v", err)
-		return "", err
-	}
-
-	return msg, nil
 }

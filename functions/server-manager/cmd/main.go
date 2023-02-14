@@ -6,11 +6,11 @@ import (
 	"log"
 	"net/http"
 
-	serverStatus "github.com/felixskaiser/7d2d_game_server/status"
+	serverManager "github.com/felixskaiser/7d2d_game_server/server-manager"
 )
 
 func main() {
-	http.HandleFunc("/", serverStatus.Entrypoint)
+	http.HandleFunc("/", serverManager.Entrypoint)
 	fmt.Println("Listening on localhost:8888")
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }
