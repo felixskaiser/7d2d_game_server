@@ -42,3 +42,9 @@ resource "google_project_service" "cloud_run_service" {
   project    = google_project.project.name
   depends_on = [google_project.project]
 }
+
+resource "google_project_service" "monitoring_service" {
+  service    = "monitoring.googleapis.com"
+  project    = google_project.project.name
+  depends_on = [google_project.project]
+}

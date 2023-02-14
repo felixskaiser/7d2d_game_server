@@ -37,6 +37,13 @@ resource "google_compute_instance" "game_server" {
     startup-script  = local.game_server_startup_script
     shutdown-script = local.game_server_shutdown_script
   }
+
+  service_account {
+    scopes = [
+      "cloud-platform",
+      "logging-write"
+    ]
+  }
 }
 
 data "google_compute_image" "ubuntu_image" {

@@ -29,6 +29,13 @@ SERVERCONFIG_OFFHOURS_FILE_NAME="serverconfig_game_offhours.xml"
 ADMINCONFIG_FILE_NAME="serveradmin.xml"
 
 ###############################################################################
+# Install GCP Ops Agent
+###############################################################################
+
+curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+
+###############################################################################
 # Install 'steamcmd' dependencies
 ###############################################################################
 echo "INFO: Install 'steamcmd' and dependencies"
