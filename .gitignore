@@ -4,3 +4,4 @@
 *.tfstate.backup
 TODO
 upload/
+.DS_Store
