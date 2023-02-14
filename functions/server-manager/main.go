@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	templateSubDir string = "templates/"
+	templateSubDir        string = "templates/"
+	functionSourceCodeDir string = "/workspace/serverless_function_source_code/"
 )
 
 var (
+	ctx                  context.Context
 	templateDir          string
 	projectID            string
 	zone                 string
@@ -77,31 +79,7 @@ func init() {
 	}
 
 	if iscloudFunctionStr == "true" {
-		// DEBUG
-		_, err := os.Stat("/workspace")
-		if err != nil {
-			log.Printf("Not a directory: /workspace': %v", err)
-		} else {
-			entries, _ := os.ReadDir("/workspace")
-			log.Printf("DEBUG: '/workspace' => %v", entries)
-			for _, e := range entries {
-				log.Printf("DEBUG: %v", e.Name())
-			}
-		}
-
-		_, err = os.Stat("/workspace/serverless_function_source_code")
-		if err != nil {
-			log.Printf("Not a directory: ./serverless_function_source_code': %v", err)
-		} else {
-			entries, _ := os.ReadDir("./serverless_function_source_code")
-			log.Printf("DEBUG: './serverless_function_source_code' => %v", entries)
-			for _, e := range entries {
-				log.Printf("DEBUG: %v", e.Name())
-			}
-		}
-
-		functionSourceCodeDir := "/workspace/serverless_function_source_code/"
-		_, err = os.Stat(functionSourceCodeDir)
+		_, err := os.Stat(functionSourceCodeDir)
 		if err != nil {
 			log.Fatalf("Not a directory: '%s': %v", functionSourceCodeDir, err)
 		}
@@ -117,7 +95,7 @@ func init() {
 	}
 	log.Printf("Looking for HTML template files at %s", templateDir)
 
-	ctx := context.Background()
+	ctx = context.Background()
 
 	// Create GCP Secret Manager client
 	secretManagerClient, err := secretmanager.NewClient(ctx)
@@ -151,6 +129,7 @@ func init() {
 	}
 
 	// Register routes
+	mux.HandleFunc("/start", basicAuth(startServer, userName, password))
 	mux.HandleFunc("/status", basicAuth(getServerStatus, userName, password))
 	mux.HandleFunc("/", basicAuth(defaultHandler, userName, password))
 

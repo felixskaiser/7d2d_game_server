@@ -12,10 +12,10 @@ import (
 // Basic auth middleware
 func basicAuth(next http.HandlerFunc, expectedUsername, expectedPassword string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Authenticating request")
+		log.Printf("Authenticating request for '%s'", r.URL)
 		reqInfo, err := getReqInfo(r)
 		if err != nil {
-			log.Printf("Couldn't get requester info from request: %s", err)
+			log.Printf("Couldn't get requester info from request for '%s': %s", r.URL, err)
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
@@ -32,13 +32,13 @@ func basicAuth(next http.HandlerFunc, expectedUsername, expectedPassword string)
 			passwordMatch := (subtle.ConstantTimeCompare(passwordHash[:], expectedPasswordHash[:]) == 1)
 
 			if usernameMatch && passwordMatch {
-				log.Printf("Authenticated request from %s", reqInfo)
+				log.Printf("Authenticated request from %s for '%s'", reqInfo, r.URL)
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
 
-		log.Printf("Unauthenticated request from %s", reqInfo)
+		log.Printf("Unauthenticated request from %s for '%s'", reqInfo, r.URL)
 		w.Header().Set("WWW-Authenticate", `Basic realm="7d2dgameserver", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
@@ -54,5 +54,5 @@ func getReqInfo(r *http.Request) (string, error) {
 	ipParsed := net.ParseIP(ip)
 	forwarded := r.Header.Get("X-Forwarded-For")
 
-	return fmt.Sprintf("remote address: '%s:%s', forwarded: %s", ipParsed, port, forwarded), nil
+	return fmt.Sprintf("remote address: '%s:%s', forwarded: '%s'", ipParsed, port, forwarded), nil
 }
