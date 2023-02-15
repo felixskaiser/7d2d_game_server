@@ -40,8 +40,9 @@ locals {
   game_server_shutdown_script = "#! /bin/bash 7d2d_server stop"
 
   # functions
-  function_status_roles = [
+  server_manager_function_roles = [
     "roles/secretmanager.secretAccessor",
-    "roles/compute.viewer"
+    "roles/compute.viewer",
+    "roles/compute.instanceAdmin.v1"
   ]
 }

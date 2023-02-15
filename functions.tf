@@ -87,7 +87,7 @@ resource "google_service_account" "server_manager_function" {
 }
 
 resource "google_project_iam_member" "server_manager_function" {
-  for_each = toset(local.function_status_roles)
+  for_each = toset(local.server_manager_function_roles)
   project  = google_project.project.name
   member   = "serviceAccount:${google_service_account.server_manager_function.email}"
   role     = each.value
