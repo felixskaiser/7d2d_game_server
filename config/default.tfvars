@@ -1,4 +1,4 @@
 project_id     = "game-server-7d2d-felix"
 default_region = "europe-west3"   # Frankfurt
 default_zone   = "europe-west3-b" # Frankfurt
-machine_type   = "e2-standard-8"
+machine_type   = "e2-standard-16"
