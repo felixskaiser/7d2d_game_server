@@ -1,16 +1,16 @@
 ${SERVERCONFIG_BASE}
 	<!-- Difficulty -->
 	<property name="GameDifficulty"					value="2"/>					<!-- 0 - 5, 0=easiest, 5=hardest -->
-	<property name="BlockDamagePlayer"				value="100" />				<!-- How much damage do players to blocks (percentage in whole numbers) -->
-	<property name="BlockDamageAI"					value="100" />				<!-- How much damage do AIs to blocks (percentage in whole numbers) -->
-	<property name="BlockDamageAIBM"				value="100" />				<!-- How much damage do AIs during blood moons to blocks (percentage in whole numbers) -->
-	<property name="XPMultiplier"					value="25" />				<!-- XP gain multiplier (percentage in whole numbers) -->
+	<property name="BlockDamagePlayer"				value="110" />				<!-- How much damage do players to blocks (percentage in whole numbers) -->
+	<property name="BlockDamageAI"					value="90" />				<!-- How much damage do AIs to blocks (percentage in whole numbers) -->
+	<property name="BlockDamageAIBM"				value="90" />				<!-- How much damage do AIs during blood moons to blocks (percentage in whole numbers) -->
+	<property name="XPMultiplier"					value="17" />				<!-- XP gain multiplier (percentage in whole numbers) -->
 	<property name="PlayerSafeZoneLevel"			value="10" />				<!-- If a player is less or equal this level he will create a safe zone (no enemies) when spawned -->
 	<property name="PlayerSafeZoneHours"			value="24" />				<!-- Hours in world time this safe zone exists -->
 
 	<!--  -->
 	<property name="BuildCreate"					value="false" />			<!-- cheat mode on/off -->
-	<property name="DayNightLength"					value="240" />				<!-- real time minutes per in game day: 60 minutes -->
+	<property name="DayNightLength"					value="360" />				<!-- real time minutes per in game day: 60 minutes -->
 	<property name="DayLightLength"					value="23" />				<!-- in game hours the sun shines per day: 18 hours day light per in game day -->
 	<property name="DropOnDeath"					value="0" />				<!-- 0 = nothing, 1 = everything, 2 = toolbelt only, 3 = backpack only, 4 = delete all -->
 	<property name="DropOnQuit"						value="0" />				<!-- 0 = nothing, 1 = everything, 2 = toolbelt only, 3 = backpack only -->
@@ -27,13 +27,13 @@ ${SERVERCONFIG_BASE}
 	<property name="EnemyDifficulty"				value="0" />				<!-- 0 = Normal, 1 = Feral -->
 	<property name="ZombieFeralSense"				value="0" />				<!-- 0-3 (Off, Day, Night, All) -->
 	<property name="ZombieMove"						value="0" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
-	<property name="ZombieMoveNight"				value="3" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
-	<property name="ZombieFeralMove"				value="3" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
-	<property name="ZombieBMMove"					value="3" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="ZombieMoveNight"				value="1" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="ZombieFeralMove"				value="2" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
+	<property name="ZombieBMMove"					value="2" />				<!-- 0-4 (walk, jog, run, sprint, nightmare) -->
 	<property name="BloodMoonFrequency"				value="7" />				<!-- What frequency (in days) should a blood moon take place. Set to "0" for no blood moons -->
 	<property name="BloodMoonRange"					value="0" />				<!-- How many days can the actual blood moon day randomly deviate from the above setting. Setting this to 0 makes blood moons happen exactly each Nth day as specified in BloodMoonFrequency -->
 	<property name="BloodMoonWarning"				value="8" />				<!-- The Hour number that the red day number begins on a blood moon day. Setting this to -1 makes the red never show.  -->
-	<property name="BloodMoonEnemyCount"			value="8" />				<!-- This is the number of zombies that can be alive (spawned at the same time) at any time PER PLAYER during a blood moon horde, however, MaxSpawnedZombies overrides this number in multiplayer games. Also note that your game stage sets the max number of zombies PER PARTY. Low game stage values can result in lower number of zombies than the BloodMoonEnemyCount setting. Changing this setting has a huge impact on performance. -->
+	<property name="BloodMoonEnemyCount"			value="6" />				<!-- This is the number of zombies that can be alive (spawned at the same time) at any time PER PLAYER during a blood moon horde, however, MaxSpawnedZombies overrides this number in multiplayer games. Also note that your game stage sets the max number of zombies PER PARTY. Low game stage values can result in lower number of zombies than the BloodMoonEnemyCount setting. Changing this setting has a huge impact on performance. -->
 
 	<!-- Loot -->
 	<property name="LootAbundance"					value="100" />				<!-- percentage in whole numbers -->

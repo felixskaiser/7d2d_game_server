@@ -182,17 +182,12 @@ else
 fi
 
 # Add cronjob to conditionally set game mode
-crontab -l > newcron || true
+touch newcron
 start_offhours_cron="$OFFHOURS_START_TIME_CRON $CMD_NAME reload $SERVERCONFIG_OFFHOURS_FILE_NAME"
 start_default_cron="$OFFHOURS_END_TIME_CRON $CMD_NAME reload $SERVERCONFIG_DEFAULT_FILE_NAME"
 
-if ! cat newcron|grep "$start_offhours_cron"; then
-    echo "$start_offhours_cron" >> newcron
-fi
-
-if ! cat newcron|grep "$start_default_cron"; then
-    echo "$start_default_cron" >> newcron
-fi
+echo "$start_offhours_cron" >> newcron
+echo "$start_default_cron" >> newcron
 
 crontab newcron
 rm newcron
